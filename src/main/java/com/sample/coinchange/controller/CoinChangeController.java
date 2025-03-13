@@ -1,26 +1,36 @@
 package com.sample.coinchange.controller;
 
-import com.sample.coinchange.dto.CoinType;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Arrays;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
+import com.sample.coinchange.dto.CoinChangeResponse;
+import com.sample.coinchange.exception.InvalidBillAmountException;
+import com.sample.coinchange.service.CoinChangeService;
+
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @Slf4j
 public class CoinChangeController {
 
-    @GetMapping(value = "/api/change/{bill}",
-                produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<CoinType, Integer> calculateChange(@PathVariable Integer bill) {
-        log.info("Calculating change for {}", bill);
-        return Map.of(
-                CoinType.QUARTER, 2,
-                CoinType.DIME, 5,
-                CoinType.NICKEL, 20
-        );
-    }
+	@Autowired
+	private CoinChangeService coinChangeService;
+
+	@GetMapping(value = "/api/change/{bill}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public List<CoinChangeResponse> calculateChange(@PathVariable Integer bill) {
+		log.info("Calculating change for {}", bill);
+
+		List<Integer> validBills = Arrays.asList(1, 2, 5, 10, 20, 50, 100);
+
+		if (!validBills.contains(bill)) {
+			throw new InvalidBillAmountException("Invalid bill amount. Accepted bills: 1, 2, 5, 10, 20, 50, 100.");
+		}
+		return coinChangeService.getChange(bill);
+	}
 }
